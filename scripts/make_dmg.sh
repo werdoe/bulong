@@ -7,7 +7,7 @@ DMG_PATH="dist/OnTheSpot.dmg"
 
 if [[ ! -d "$APP_PATH" ]]; then
   echo "App not found at $APP_PATH"
-  echo "Run ./scripts/build_macos_app.sh first"
+  echo "Run ./scripts/build_swift_app.sh first"
   exit 1
 fi
 

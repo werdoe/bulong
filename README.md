@@ -1,25 +1,62 @@
 # On The Spot
 
-A real-time meeting copilot for macOS. Transcribes conversations, retrieves context from your local knowledge base, and generates talking-point suggestions as you talk.
+On The Spot is a macOS meeting copilot for live conversations. It listens to your mic and the other side of the call, transcribes both streams in real time, searches your notes, and surfaces grounded talking points while the conversation is happening.
 
-Built with SwiftUI, using Apple's on-device Speech framework for transcription and OpenRouter for LLM-powered suggestions.
+The current app is the SwiftUI macOS app in [`OnTheSpot/`](./OnTheSpot). This repo still contains some older Python prototype files, but the active product and release flow are the Swift app.
 
-## Features
+## What It Does
 
-- On-device speech-to-text via Apple Speech framework (no cloud transcription)
-- Dual audio capture: microphone (you) + system audio (them)
-- Knowledge base indexing from local `.md` and `.txt` files
-- LLM-powered suggestion engine via OpenRouter (any model)
-- Compact, partially transparent window designed to sit alongside your call
-- Floating overlay mode (Cmd+Shift+O) for screen-share-safe suggestions
-- Input device selection for choosing your microphone
-- Audio level visualization showing live mic activity
-- Session logging to local JSONL files
+- Captures your microphone and system audio separately during a call
+- Transcribes speech locally on-device with FluidAudio, Parakeet-TDT, and VAD
+- Indexes local `.md` and `.txt` knowledge-base files
+- Retrieves relevant context with Voyage AI embeddings and reranking
+- Generates selective, evidence-backed suggestions with OpenRouter
+- Shows a live transcript and a compact suggestions pane
+- Saves plain-text transcripts and structured session logs locally
+- Hides app windows from screen sharing by default
+
+## How It Works
+
+On The Spot is local-first, but not fully offline:
+
+- Transcription runs locally on your Mac
+- Knowledge-base chunks are sent to Voyage AI for embeddings and reranking
+- Recent conversation context and retrieved KB evidence are sent to OpenRouter to generate suggestions
+- API keys are stored in Keychain; other app settings are stored locally in `UserDefaults`
 
 ## Requirements
 
-- macOS 26+ (Apple Silicon)
-- Xcode / Swift toolchain
+- Apple Silicon Mac
+- macOS 26+
+- Xcode 26 / Swift 6.2 toolchain
+- An OpenRouter API key for suggestions
+- A Voyage AI API key for knowledge-base indexing and retrieval
+
+## Quick Start
+
+1. Build and install the app:
+
+   ```bash
+   ./scripts/build_swift_app.sh
+   ```
+
+2. Launch `/Applications/On The Spot.app`.
+
+3. Grant permissions when macOS prompts for them:
+   - Microphone access
+   - Screen capture / system audio access
+
+4. Open Settings with `Cmd+,` and configure:
+   - `Voyage AI` API key
+   - `OpenRouter` API key
+   - Model name
+   - Microphone input
+   - Transcription locale
+   - Optional knowledge-base folder
+
+5. Click `Idle` to start a session.
+
+The first live run downloads the local ASR model, which is roughly 600 MB.
 
 ## Build
 
@@ -27,34 +64,63 @@ Built with SwiftUI, using Apple's on-device Speech framework for transcription a
 ./scripts/build_swift_app.sh
 ```
 
-This builds a signed `.app` bundle and installs it to `/Applications/On The Spot.app`.
+This script:
 
-Optional env vars for code signing and notarization:
+- builds the Swift package in release mode
+- creates `dist/On The Spot.app`
+- signs the app if a signing identity is available
+- optionally notarizes it if Apple credentials are present
+- installs the app to `/Applications/On The Spot.app`
+
+Optional environment variables for signing and notarization:
+
 - `CODESIGN_IDENTITY`
 - `APPLE_ID`
 - `APPLE_TEAM_ID`
 - `APPLE_APP_PASSWORD`
 
-## Setup
+For a package-only build during development:
 
-1. Launch the app
-2. Open Settings (Cmd+,)
-3. Set your OpenRouter API key
-4. Choose an LLM model (e.g. `google/gemini-3-flash-preview`)
-5. Select your microphone input device
-6. Optionally choose a knowledge base folder containing `.md`/`.txt` files
+```bash
+cd OnTheSpot
+swift build -c debug
+```
 
-## Usage
+## Using the App
 
-- Click **Idle** in the bottom bar to start a session (switches to **Live**)
-- Audio level bars show mic activity in real time
-- Suggestions appear automatically when the other person speaks about topics in your KB
-- Expand the **Transcript** section to see the live conversation
-- **Cmd+Shift+O** toggles the floating overlay (invisible to screen sharing)
-- **Esc** hides the overlay
+- The top bar shows KB indexing status and lets you choose a knowledge-base folder
+- The main pane shows suggestion cards grounded in retrieved KB sources
+- The transcript pane shows both speakers and lets you copy the finalized transcript
+- The bottom control bar starts and stops live capture and shows mic activity
+- Suggestions only appear when the app decides the current moment is worth surfacing and it has strong enough KB evidence
 
-## Build DMG
+## Knowledge Base
+
+- Point the app at a folder containing `.md` or `.txt` files
+- Files are chunked locally and cached after embedding
+- The app re-indexes when the folder or Voyage API key changes
+- KB cache is stored at `~/Library/Application Support/On The Spot/kb_cache.json`
+
+## Permissions And Local Data
+
+- Microphone permission is required to capture your side of the conversation
+- Screen capture permission is required to capture system audio from the other side of the call
+- Plain-text transcripts are saved to `~/Documents/On The Spot/`
+- Structured JSONL session logs are saved to `~/Library/Application Support/On The Spot/sessions/`
+- `Hide from screen sharing` is enabled by default and can be changed in Settings
+
+## Packaging
+
+To build a DMG after building the app:
 
 ```bash
 ./scripts/make_dmg.sh
 ```
+
+The GitHub release workflow uses the same Swift build script and then packages `dist/OnTheSpot.dmg`.
+
+## Repo Notes
+
+- `OnTheSpot/` contains the current SwiftUI app
+- `scripts/build_swift_app.sh` is the current build/install path
+- `scripts/build_macos_app.sh` is a legacy packaging path for the older Python prototype and is not used for the current app
