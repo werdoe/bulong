@@ -82,26 +82,6 @@ else
   echo "Warning: No signing identity found. App will be unsigned."
 fi
 
-# Notarize if credentials are available
-if [[ -n "${APPLE_ID:-}" && -n "${APPLE_TEAM_ID:-}" && -n "${APPLE_APP_PASSWORD:-}" ]]; then
-  echo "Submitting for notarization..."
-
-  ZIP_PATH="$ROOT_DIR/dist/OpenGranola-notarize.zip"
-  ditto -c -k --keepParent "$APP_DIR" "$ZIP_PATH"
-
-  if xcrun notarytool submit "$ZIP_PATH" \
-    --apple-id "$APPLE_ID" \
-    --team-id "$APPLE_TEAM_ID" \
-    --password "$APPLE_APP_PASSWORD" \
-    --wait; then
-    xcrun stapler staple "$APP_DIR"
-    echo "Notarization complete"
-  else
-    echo "Warning: Notarization failed. App is signed but not notarized."
-  fi
-  rm -f "$ZIP_PATH"
-fi
-
 # Install to /Applications
 cp -R "$APP_DIR" /Applications/
 echo "Installed to /Applications/$APP_NAME.app"
