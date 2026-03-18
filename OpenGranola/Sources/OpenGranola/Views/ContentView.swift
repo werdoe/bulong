@@ -105,7 +105,7 @@ struct ContentView: View {
                 onConfirmDownload: confirmDownloadAndStart
             )
         }
-        .frame(minWidth: 280, maxWidth: 600, minHeight: 400)
+        .frame(minWidth: 360, maxWidth: 600, minHeight: 400)
         .background(.ultraThinMaterial)
         .overlay {
             if showOnboarding {
@@ -168,98 +168,105 @@ struct ContentView: View {
     // MARK: - Top Bar
 
     private var topBar: some View {
-        HStack(spacing: 8) {
-            Text("On The Spot")
-                .font(.system(size: 13, weight: .semibold))
+        VStack(spacing: 6) {
+            // Row 1: App name + KB folder
+            HStack {
+                Text("OpenGranola")
+                    .font(.system(size: 13, weight: .semibold))
 
-            // Template picker
-            @Bindable var coord = coordinator
-            Menu {
-                Button {
-                    coordinator.selectedTemplate = nil
-                } label: {
-                    HStack {
-                        Text("None")
-                        if coordinator.selectedTemplate == nil {
-                            Image(systemName: "checkmark")
+                Spacer()
+
+                // KB status
+                if let kb = knowledgeBase {
+                    if !kb.indexingProgress.isEmpty {
+                        Text(kb.indexingProgress)
+                            .font(.system(size: 10))
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    } else if kb.isIndexed {
+                        HStack(spacing: 4) {
+                            Image(systemName: "folder")
+                                .font(.system(size: 10))
+                            Text("\(kb.fileCount) files")
+                                .font(.system(size: 11))
                         }
-                    }
-                }
-                Divider()
-                ForEach(coordinator.templateStore.templates) { template in
-                    Button {
-                        coordinator.selectedTemplate = template
-                    } label: {
-                        Label(template.name, systemImage: template.icon)
-                    }
-                }
-            } label: {
-                HStack(spacing: 4) {
-                    if let template = coordinator.selectedTemplate {
-                        Image(systemName: template.icon)
-                            .font(.system(size: 10))
-                        Text(template.name)
-                            .font(.system(size: 11))
-                    } else {
-                        Image(systemName: "doc.text")
-                            .font(.system(size: 10))
-                        Text("Template")
-                            .font(.system(size: 11))
-                    }
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 8))
-                }
-                .foregroundStyle(.secondary)
-            }
-            .menuStyle(.borderlessButton)
-            .fixedSize()
-
-            Spacer()
-
-            // KB status
-            if let kb = knowledgeBase {
-                if !kb.indexingProgress.isEmpty {
-                    Text(kb.indexingProgress)
-                        .font(.system(size: 10))
                         .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                } else if kb.isIndexed {
-                    HStack(spacing: 4) {
-                        Image(systemName: "folder")
-                            .font(.system(size: 10))
-                        Text("\(kb.fileCount) files")
-                            .font(.system(size: 11))
                     }
-                    .foregroundStyle(.secondary)
                 }
-            }
 
-            if settings.kbFolderPath.isEmpty {
-                Button("Set KB Folder...") {
-                    chooseKBFolder()
-                }
-                .buttonStyle(.plain)
-                .font(.system(size: 11))
-                .foregroundStyle(Color.accentTeal)
-            } else {
-                HStack(spacing: 4) {
-                    Button {
-                        NSWorkspace.shared.open(URL(fileURLWithPath: settings.kbFolderPath))
-                    } label: {
-                        Image(systemName: "folder")
-                            .font(.system(size: 10))
-                    }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(.secondary)
-                    .help("Open in Finder")
-
-                    Button("Change...") {
+                if settings.kbFolderPath.isEmpty {
+                    Button("Set KB Folder...") {
                         chooseKBFolder()
                     }
                     .buttonStyle(.plain)
                     .font(.system(size: 11))
                     .foregroundStyle(Color.accentTeal)
+                } else {
+                    HStack(spacing: 4) {
+                        Button {
+                            NSWorkspace.shared.open(URL(fileURLWithPath: settings.kbFolderPath))
+                        } label: {
+                            Image(systemName: "folder")
+                                .font(.system(size: 10))
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.secondary)
+                        .help("Open in Finder")
+
+                        Button("Change...") {
+                            chooseKBFolder()
+                        }
+                        .buttonStyle(.plain)
+                        .font(.system(size: 11))
+                        .foregroundStyle(Color.accentTeal)
+                    }
                 }
+            }
+
+            // Row 2: Template picker
+            HStack {
+                @Bindable var coord = coordinator
+                Menu {
+                    Button {
+                        coordinator.selectedTemplate = nil
+                    } label: {
+                        HStack {
+                            Text("None")
+                            if coordinator.selectedTemplate == nil {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                    Divider()
+                    ForEach(coordinator.templateStore.templates) { template in
+                        Button {
+                            coordinator.selectedTemplate = template
+                        } label: {
+                            Label(template.name, systemImage: template.icon)
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        if let template = coordinator.selectedTemplate {
+                            Image(systemName: template.icon)
+                                .font(.system(size: 10))
+                            Text(template.name)
+                                .font(.system(size: 11))
+                        } else {
+                            Image(systemName: "doc.text")
+                                .font(.system(size: 10))
+                            Text("Template")
+                                .font(.system(size: 11))
+                        }
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 8))
+                    }
+                    .foregroundStyle(.secondary)
+                }
+                .menuStyle(.borderlessButton)
+                .fixedSize()
+
+                Spacer()
             }
         }
         .padding(.horizontal, 16)

@@ -2,6 +2,12 @@
 
 A meeting note-taker that talks back.
 
+<p align="center">
+  <a href="https://github.com/yazinsai/OpenGranola/releases/latest">
+    <img src="https://img.shields.io/badge/Download_for_Mac-DMG-black?style=for-the-badge&logo=apple&logoColor=white" alt="Download for Mac" />
+  </a>
+</p>
+
 OpenGranola sits next to your call, transcribes both sides of the conversation in real time, and searches your own notes to surface things worth saying — right when you need them.
 
 Think of it as Granola on steroids: it doesn't just take notes, it reads the room, digs through your knowledge base, and hands you the perfect talking point before the moment passes.
